@@ -43,7 +43,6 @@ handler RESTserver::getPollHandler() {
         return this->pollHandler.eventHandler;
     }
     else {
-        // Return a function that does nothing
         return [](struct mg_connection *connection, int ev, mg_http_message *ev_data, void *fn_data) {};
     }
 }
@@ -81,34 +80,26 @@ void RESTserver::stopServer() {
 }
 
 handler RESTserver::matchHandler(std::string method, std::string path) {
-    auto info = this->router.find(path);        // Find corresponding request handler
+    auto info = this->router.find(path);   
 
     if (info != this->router.end()) {
-        // There's a corresponding entry in the router
         if (info->second.method.at(0) == '\0' || ucase(method) == info->second.method) {
-            // The request method matches
             return info->second.eventHandler;
         }
         else {
-            // The request method does not match
             if (this->wrongMethodHandler.eventHandler) {
-                // There's a user-set wrong method handler
                 return this->wrongMethodHandler.eventHandler;
             }
             else {
-                // No user-set wrong method handler, use the built-in function instead
                 return builtInHandler;
             }
         }
     }
     else {
-        // No corresponding entry in the router
         if (this->defaultHandler.eventHandler) {
-            // There's a user-set default handler
             return this->defaultHandler.eventHandler;
         }
         else {
-            // No user-set default handler, use the built-in function instead
             return builtInHandler;
         }
     }
@@ -123,13 +114,11 @@ static void builtInHandler(mg_connection *connection, int ev, mg_http_message *e
     );
 }
 static void httpRequestDispatch(struct mg_connection *connection, int ev, void *ev_data, void *fn_data) {
-    RESTserver *ptrToClass = ((dispatcherInfo *)fn_data)->ptrToClass;   // Obtain a pointer to the corresponding class
+    RESTserver *ptrToClass = ((dispatcherInfo *)fn_data)->ptrToClass; 
 
     if (ev == MG_EV_HTTP_MSG) {
-        // Handle HTTP request
         struct mg_http_message *httpMsg = (struct mg_http_message *)ev_data;
 
-        // Find a matching handler and call it
         auto handler = ptrToClass->matchHandler(
             std::string(httpMsg->method.ptr, httpMsg->method.len),
             std::string(httpMsg->uri.ptr, httpMsg->uri.len)
@@ -137,7 +126,6 @@ static void httpRequestDispatch(struct mg_connection *connection, int ev, void *
         handler(connection, ev, (mg_http_message *)ev_data, fn_data);
     }
     else if (ev == MG_EV_POLL) {
-        // Handle poll event
         auto handler = ptrToClass->getPollHandler();
         handler(connection, ev, (mg_http_message *)ev_data, fn_data);
     }

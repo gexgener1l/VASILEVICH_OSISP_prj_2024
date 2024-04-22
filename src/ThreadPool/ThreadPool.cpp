@@ -27,7 +27,6 @@ void ThreadPool::shutdown(bool finishRemainingJobs) {
     this->workMutex.lock();
     while (!this->jobQueue.empty()) {
         if (finishRemainingJobs) {
-            // Finish all jobs in the queue, one by one
             job currentJob = this->jobQueue.front();
             if (currentJob.func) {
                 currentJob.func(currentJob.args);
@@ -36,14 +35,13 @@ void ThreadPool::shutdown(bool finishRemainingJobs) {
         this->jobQueue.pop();
     }
     this->stop = true;
-    this->newJobCond.notify_all();  // There isn't really a "new job", this just unblocks the workers to allow them to exit
+    this->newJobCond.notify_all(); 
     this->workMutex.unlock();
 }
 
 bool ThreadPool::addJob(job newJob) {
     this->workMutex.lock();
 
-    // Check for maximum queue size. 0 means no limitation
     if (maxJobCount == 0 || this->jobQueue.size() < maxJobCount) {
         this->jobQueue.push(newJob);
         this->newJobCond.notify_all();
@@ -59,7 +57,6 @@ bool ThreadPool::addJob(job newJob) {
 void ThreadPool::waitForAllJobsDone() {
     std::unique_lock<std::mutex> lock(this->workMutex);
     for (;;) {
-        // Wait until no working threads and the queue is empty
         if (this->workingCount != 0 || !this->jobQueue.empty()) {
             this->noJobCond.wait(lock);
         }
@@ -74,12 +71,10 @@ void worker(ThreadPool *pool) {
     for (;;) {
         std::unique_lock<std::mutex> lock(pool->workMutex);
 
-        // Wait for a new job or the stop signal
         while (pool->jobQueue.empty() && !pool->stop) {
             pool->newJobCond.wait(lock);
         }
         
-        // Stop signal caught, exit the thread
         if (pool->stop) {
             pool->threadCount--;
             pool->noJobCond.notify_one();
@@ -87,7 +82,6 @@ void worker(ThreadPool *pool) {
             return;
         }
 
-        // Obtain a job from the queue and start working!
         job currentJob = pool->jobQueue.front();
         pool->jobQueue.pop();
         pool->workingCount++;
@@ -97,11 +91,9 @@ void worker(ThreadPool *pool) {
             currentJob.func(currentJob.args);
         }
 
-        // Job finished
         lock.lock();
         pool->workingCount--;
         if (pool->jobQueue.empty() && !pool->stop && pool->workingCount == 0) {
-            // Notify there's no job working
             pool->noJobCond.notify_one();
         }
         lock.unlock();
