@@ -15,8 +15,8 @@ public:
 class ThreadPool {
 public:
     std::mutex              workMutex;
-    std::condition_variable newJobCond;         // Signals when there's a new job to be processed
-    std::condition_variable noJobCond;          // Signals when all threads are not working
+    std::condition_variable newJobCond;      
+    std::condition_variable noJobCond;        
     std::queue<job>         jobQueue;
     bool                    stop;
     size_t                  workingCount;

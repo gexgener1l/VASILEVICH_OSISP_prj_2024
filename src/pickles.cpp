@@ -1,7 +1,6 @@
 
 #include "RESTserver/RESTserver.hpp"
 #include "ThreadPool/ThreadPool.hpp"
-#include "utils/json.hpp"
 #include <signal.h>
 
 #if !defined(_MSC_VER)
@@ -34,21 +33,21 @@ static void handleCalc(void *calcParam) {
     closesocket(param->socket);
 }
 
-static void handleJson(void *socket) {
-    json j = {
-        {"pi", 3.141},
-        {"happy", true},
-        {"name", "Niels"},
-        {"nothing", nullptr},
-        {"answer", {
-            {"everything", 42}
-        }},
-        {"list", {1, 0, 2}},
-        {"object", {
-          {"currency", "USD"},
-          {"value", 42.99}
-        }}
-    };
+// static void handleJson(void *socket) {
+//     json j = {
+//         {"pi", 3.141},
+//         {"happy", true},
+//         {"name", "Niels"},
+//         {"nothing", nullptr},
+//         {"answer", {
+//             {"everything", 42}
+//         }},
+//         {"list", {1, 0, 2}},
+//         {"object", {
+//           {"currency", "USD"},
+//           {"value", 42.99}
+//         }}
+//     };
     response res;
     res.data = _strdup(j.dump().c_str());
     res.httpCode = 200;
@@ -113,7 +112,6 @@ int main() {
 
             mg_socketpair(&blocking, &non_blocking);
             connection->socketpair_socket = non_blocking;
-            threadPool.addJob(job(handleJson, (void *)blocking));
         }
     );
 
