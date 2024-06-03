@@ -10,7 +10,6 @@
 
 RESTserver server;
 ThreadPool threadPool;
-using json = nlohmann::json;
 
 typedef struct _response {
     char *data;
@@ -33,28 +32,6 @@ static void handleCalc(void *calcParam) {
     closesocket(param->socket);
 }
 
-// static void handleJson(void *socket) {
-//     json j = {
-//         {"pi", 3.141},
-//         {"happy", true},
-//         {"name", "Niels"},
-//         {"nothing", nullptr},
-//         {"answer", {
-//             {"everything", 42}
-//         }},
-//         {"list", {1, 0, 2}},
-//         {"object", {
-//           {"currency", "USD"},
-//           {"value", 42.99}
-//         }}
-//     };
-    response res;
-    res.data = _strdup(j.dump().c_str());
-    res.httpCode = 200;
-    res.headers = _strdup("Content-Type: application/json\r\n");
-    send((int)(long)socket, (char *)&res, sizeof(res), 0);
-    closesocket((int)(long)socket);
-}
 
 int main() {
     server.setDefaultHandler(
